@@ -976,50 +976,53 @@ extern spinlock_t sb_lock;
 
 #define sb_entry(list)	list_entry((list), struct super_block, s_list)
 #define S_BIAS (1<<30)
+/**
+ * @brief Structure to store information concerning a mounted file system.
+ **/
 struct super_block {
-	struct list_head	s_list;		/* Keep this first */
-	dev_t			s_dev;		/* search index; _not_ kdev_t */
-	unsigned long		s_blocksize;
-	unsigned char		s_blocksize_bits;
-	unsigned char		s_dirt;
-	unsigned long long	s_maxbytes;	/* Max file size */
-	struct file_system_type	*s_type;
-	const struct super_operations	*s_op;
-	struct dquot_operations	*dq_op;
- 	struct quotactl_ops	*s_qcop;
-	const struct export_operations *s_export_op;
-	unsigned long		s_flags;
-	unsigned long		s_magic;
-	struct dentry		*s_root;
-	struct rw_semaphore	s_umount;
-	struct mutex		s_lock;
-	int			s_count;
-	int			s_syncing;
-	int			s_need_sync_fs;
-	atomic_t		s_active;
+	struct list_head	s_list;	/**< Pointer for Superblock list. Keep this first */
+	dev_t			s_dev;	/**< Device identifier. Search index; _not_ kdev_t */
+	unsigned long		s_blocksize;	/**< Block size(Byte) */
+	unsigned char		s_blocksize_bits;	/**< Block size(bits) */ 
+	unsigned char		s_dirt;	/**< Modified flag */
+	unsigned long long	s_maxbytes;	/**< Max size of files */
+	struct file_system_type	*s_type;	/**< Filesystem type */
+	const struct super_operations	*s_op;	/**< Superblock methods */
+	struct dquot_operations	*dq_op;	/**< Disk quota handling methods */
+ 	struct quotactl_ops	*s_qcop;	/**< Disk quota administration methods */
+	const struct export_operations *s_export_op;	/**< Export operations used by NFS */
+	unsigned long		s_flags;	/**< Mount flags */
+	unsigned long		s_magic;	/**< Filesystem magic number */
+	struct dentry		*s_root;	/**< Dentry object of the filesystem's root directory*/
+	struct rw_semaphore	s_umount;	/**< Semaphore used for unmounting */
+	struct mutex		s_lock;	/**< Superblock's semaphore */
+	int			s_count;	/**< Reference counter */
+	int			s_syncing;	/**< Indicate inodes of the superblock are being synchronized */
+	int			s_need_sync_fs;	/**< Used when synchronizing the superblock's mounted filesystem */
+	atomic_t		s_active;	/**< Secondary reference counter */
 #ifdef CONFIG_SECURITY
-	void                    *s_security;
+	void                    *s_security;	/**< Superblock's security structure */
 #endif
-	struct xattr_handler	**s_xattr;
+	struct xattr_handler	**s_xattr;	/**< Superblock's extended attribute */
 
-	struct list_head	s_inodes;	/* all inodes */
-	struct list_head	s_dirty;	/* dirty inodes */
-	struct list_head	s_io;		/* parked for writeback */
-	struct list_head	s_more_io;	/* parked for more writeback */
-	struct hlist_head	s_anon;		/* anonymous dentries for (nfs) exporting */
-	struct list_head	s_files;
+	struct list_head	s_inodes;	/**< List of all inodes */
+	struct list_head	s_dirty;	/**< List of modified inodes */
+	struct list_head	s_io;		/**< List of inodes waiting to be written back */
+	struct list_head	s_more_io;	/**< Parked for more writeback */
+	struct hlist_head	s_anon;		/**< Anonymous dentries for (nfs) exporting */
+	struct list_head	s_files;	/**< List of file objects */
 
-	struct block_device	*s_bdev;
+	struct block_device	*s_bdev;	/**< Block device driver descriptor */
 	struct mtd_info		*s_mtd;
-	struct list_head	s_instances;
-	struct quota_info	s_dquot;	/* Diskquota specific options */
+	struct list_head	s_instances;	/**< List of superblocks of given filesystem type */
+	struct quota_info	s_dquot;	/**< Diskquota specific options */
 
-	int			s_frozen;
-	wait_queue_head_t	s_wait_unfrozen;
+	int			s_frozen;	/**< Used when freezing file system */
+	wait_queue_head_t	s_wait_unfrozen;	/**< Wait queue where processes sleep until file system is unfrozen */
 
-	char s_id[32];				/* Informational name */
+	char s_id[32];	/**< Name of block device containing the superblock */
 
-	void 			*s_fs_info;	/* Filesystem private info */
+	void 			*s_fs_info;	/**< Filesystem private info */
 
 	/*
 	 * The next field is for VFS *only*. No filesystems have any business
@@ -1029,7 +1032,7 @@ struct super_block {
 
 	/* Granularity of c/m/atime in ns.
 	   Cannot be worse than a second */
-	u32		   s_time_gran;
+	u32		   s_time_gran;	/**< Timestamp's granularity(in nanoseconds) */
 
 	/*
 	 * Filesystem subtype.  If non-empty the filesystem type field
