@@ -588,54 +588,57 @@ static inline int mapping_writably_mapped(struct address_space *mapping)
 #define i_size_ordered_init(inode) do { } while (0)
 #endif
 
+/**
+ * @brief All information needed by filesystem to handle a file.
+ **/
 struct inode {
-	struct hlist_node	i_hash;
-	struct list_head	i_list;
-	struct list_head	i_sb_list;
-	struct list_head	i_dentry;
-	unsigned long		i_ino;
-	atomic_t		i_count;
-	unsigned int		i_nlink;
-	uid_t			i_uid;
-	gid_t			i_gid;
-	dev_t			i_rdev;
-	unsigned long		i_version;
-	loff_t			i_size;
+	struct hlist_node	i_hash;	/**< Hash list */
+	struct list_head	i_list;	/**< List the describe the inode's current state */
+	struct list_head	i_sb_list;	/**< List of inodes of the superblock */
+	struct list_head	i_dentry;	/**< List of dentry objects referncing the inode */
+	unsigned long		i_ino;	/**< inode number */
+	atomic_t		i_count;	/**< Usage counter */
+	unsigned int		i_nlink;	/**< Number of hard links */
+	uid_t			i_uid;	/**< Owner identifier */
+	gid_t			i_gid;	/**< Group identifier */
+	dev_t			i_rdev;	/**< Real device identifier */
+	unsigned long		i_version;	/**< Version number(increased after each use)*/
+	loff_t			i_size;	/**< File length(Bytes) */
 #ifdef __NEED_I_SIZE_ORDERED
 	seqcount_t		i_size_seqcount;
 #endif
-	struct timespec		i_atime;
-	struct timespec		i_mtime;
-	struct timespec		i_ctime;
-	unsigned int		i_blkbits;
-	blkcnt_t		i_blocks;
-	unsigned short          i_bytes;
-	umode_t			i_mode;
-	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+	struct timespec		i_atime;	/**< Time of the last file access */
+	struct timespec		i_mtime;	/**< Time of the last file write */
+	struct timespec		i_ctime;	/**< Time of the last inode change */
+	unsigned int		i_blkbits;	/**< Block size in number of bits */
+	blkcnt_t		i_blocks;	/**< Number of blocks of the file */
+	unsigned short          i_bytes;	/**< Number of bytes of last block of the file */
+	umode_t			i_mode;	/**< File type and access rights */
+	spinlock_t		i_lock;	/**< Spin lock for i_blocks, i_bytes, maybe i_size */
 	struct mutex		i_mutex;
-	struct rw_semaphore	i_alloc_sem;
-	const struct inode_operations	*i_op;
-	const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
-	struct super_block	*i_sb;
-	struct file_lock	*i_flock;
+	struct rw_semaphore	i_alloc_sem;	/**< R/W semaphore protecting against race condition in direct I/O file operations */
+	const struct inode_operations	*i_op;	/**< inode operations */
+	const struct file_operations	*i_fop;	/**< Default file operations, former ->i_op->default_file_ops */
+	struct super_block	*i_sb;	/**< Superblock */
+	struct file_lock	*i_flock;	/**< File lock list */
 	struct address_space	*i_mapping;
-	struct address_space	i_data;
+	struct address_space	i_data;	/**< Address space of the inode */
 #ifdef CONFIG_QUOTA
-	struct dquot		*i_dquot[MAXQUOTAS];
+	struct dquot		*i_dquot[MAXQUOTAS];	/**< inode disk quotas */
 #endif
-	struct list_head	i_devices;
+	struct list_head	i_devices;	/**< List of inodes relative to specific character/block devices */
 	union {
-		struct pipe_inode_info	*i_pipe;
-		struct block_device	*i_bdev;
-		struct cdev		*i_cdev;
+		struct pipe_inode_info	*i_pipe;	/**< Used if file is a pipe */
+		struct block_device	*i_bdev;	/**< Block device driver */
+		struct cdev		*i_cdev;	/**< Character device driver */
 	};
-	int			i_cindex;
+	int			i_cindex;	/**< Index fo the device file within a group of mirror numbers */
 
-	__u32			i_generation;
+	__u32			i_generation;	/**< inode version number(used by some filesystems) */
 
 #ifdef CONFIG_DNOTIFY
-	unsigned long		i_dnotify_mask; /* Directory notify events */
-	struct dnotify_struct	*i_dnotify; /* for directory notifications */
+	unsigned long		i_dnotify_mask; /**< Bits mask of directory notify events */
+	struct dnotify_struct	*i_dnotify; /**< Used for directory notifications */
 #endif
 
 #ifdef CONFIG_INOTIFY
@@ -643,16 +646,16 @@ struct inode {
 	struct mutex		inotify_mutex;	/* protects the watches list */
 #endif
 
-	unsigned long		i_state;
-	unsigned long		dirtied_when;	/* jiffies of first dirtying */
+	unsigned long		i_state;	/**< inode state flag */
+	unsigned long		dirtied_when;	/**< Dirty time(in ticks) of the inode, jiffies of first dirtying */
 
-	unsigned int		i_flags;
+	unsigned int		i_flags;	/**< System mount flag */
 
-	atomic_t		i_writecount;
+	atomic_t		i_writecount;	/**< Usage counter for writing processes */
 #ifdef CONFIG_SECURITY
-	void			*i_security;
+	void			*i_security;	/**< inode's security structure */
 #endif
-	void			*i_private; /* fs or device private pointer */
+	void			*i_private; /**< fs or device private pointer */
 };
 
 /*
@@ -1193,15 +1196,45 @@ struct file_operations {
 	int (*setlease)(struct file *, long, struct file_lock **);
 };
 
+/**
+ * @brief Methods associated with an inode object.
+ **/
 struct inode_operations {
+    /**
+	 * @brief Create a new inode for a regular file.
+	 **/
 	int (*create) (struct inode *,struct dentry *,int, struct nameidata *);
+	/**
+	 * @brief Search a directory for an inode.
+	 **/
 	struct dentry * (*lookup) (struct inode *,struct dentry *, struct nameidata *);
+	/**
+	 * @brief Create a new hard link.
+	 **/
 	int (*link) (struct dentry *,struct inode *,struct dentry *);
+	/**
+	 * @brief Remove the hard link.
+	 **/
 	int (*unlink) (struct inode *,struct dentry *);
+	/**
+	 * @brief Create a new inode for a symbolic link.
+	 **/
 	int (*symlink) (struct inode *,struct dentry *,const char *);
+	/**
+	 * @brief Create a new inode for directory.
+	 **/
 	int (*mkdir) (struct inode *,struct dentry *,int);
+	/**
+	 * @brief Remove from a directory the subdirectory.
+	 **/
 	int (*rmdir) (struct inode *,struct dentry *);
+	/**
+	 * @brief Create a new disk inode for a special file.
+	 **/
 	int (*mknod) (struct inode *,struct dentry *,int,dev_t);
+	/**
+	 * @brief Move the file to new one.
+	 **/
 	int (*rename) (struct inode *, struct dentry *,
 			struct inode *, struct dentry *);
 	int (*readlink) (struct dentry *, char __user *,int);
@@ -1238,23 +1271,69 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
  * NOTE: write_inode, delete_inode, clear_inode, put_inode can be called
  * without the big kernel lock held in all filesystems.
  */
+ /**
+  * @brief Superblock operations 
+  * */
 struct super_operations {
+	/**
+	 * Allocate space for an inode object.
+	 */
    	struct inode *(*alloc_inode)(struct super_block *sb);
+	/**
+	 * Destroy an inode object.
+	 */
 	void (*destroy_inode)(struct inode *);
-
+	/**
+	 * Fill an inode object with data on disk.
+	 */
 	void (*read_inode) (struct inode *);
-  
+	/**
+	 * Invoked when inode is marked as modified.
+	 */
    	void (*dirty_inode) (struct inode *);
+	/**
+	 * Update a filesystem inode using the content of the passed inode object.
+	 */
 	int (*write_inode) (struct inode *, int);
+	/**
+	 * Invoked when the inode reference counter is decreased.
+	 */
 	void (*put_inode) (struct inode *);
+	/**
+	 * Invoked when the inode is about to be destroyed.
+	 */
 	void (*drop_inode) (struct inode *);
+	/**
+	 * Invoked when the inode must be destroyed.
+	 */
 	void (*delete_inode) (struct inode *);
+	/**
+	 * Release the superblock(because corresponding filesystem is unmounted).
+	 */
 	void (*put_super) (struct super_block *);
+	/**
+	 * Update a filesystem superblock using passed superblock object.
+	 */
 	void (*write_super) (struct super_block *);
+	/**
+	 * Invoked when flushing the filesystem to update the filesystem-specific data structures on disk.
+	 */
 	int (*sync_fs)(struct super_block *sb, int wait);
+	/**
+	 * Blocks changes to the filesystem and update the superblock.
+	 */
 	void (*write_super_lockfs) (struct super_block *);
+	/**
+	 * Undoes the block of the filesystem updates achieved by write_super_lockfs.
+	 */
 	void (*unlockfs) (struct super_block *);
+	/**
+	 * Get the statistics of filesystem.
+	 */
 	int (*statfs) (struct dentry *, struct kstatfs *);
+	/**
+	 * Remount the filesystem with new options.
+	 */
 	int (*remount_fs) (struct super_block *, int *, char *);
 	void (*clear_inode) (struct inode *);
 	void (*umount_begin) (struct vfsmount *, int);
