@@ -35,9 +35,9 @@ struct fdtable {
 	struct fdtable *next;
 };
 
-/*
- * Open file table structure
- */
+/**
+ * @brief Open file table structure
+ **/
 struct files_struct {
   /*
    * read mostly part
@@ -49,10 +49,10 @@ struct files_struct {
    * written part on a separate cache line in SMP
    */
 	spinlock_t file_lock ____cacheline_aligned_in_smp;
-	int next_fd;
-	struct embedded_fd_set close_on_exec_init;
-	struct embedded_fd_set open_fds_init;
-	struct file * fd_array[NR_OPEN_DEFAULT];
+	int next_fd;	/**< Next fd will be used when new file is opened */
+	struct embedded_fd_set close_on_exec_init;	/**< A bit set for all file descriptors that will be closed on exec */ 
+	struct embedded_fd_set open_fds_init;	/**< Initial set of file descriptors */
+	struct file * fd_array[NR_OPEN_DEFAULT];	/**< Opened files */
 };
 
 #define files_fdtable(files) (rcu_dereference((files)->fdt))
