@@ -29,9 +29,12 @@ struct nameidata {
 	} intent;
 };
 
+/**
+ * @brief ????
+ **/
 struct path {
-	struct vfsmount *mnt;
-	struct dentry *dentry;
+	struct vfsmount *mnt;	/**< Mounted filesystem the file resides */
+	struct dentry *dentry;	/**< Connection between inode and filename */
 };
 
 /*

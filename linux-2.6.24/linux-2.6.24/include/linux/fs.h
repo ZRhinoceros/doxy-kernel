@@ -777,6 +777,9 @@ static inline int ra_has_index(struct file_ra_state *ra, pgoff_t index)
 		index <  ra->start + ra->size);
 }
 
+/**
+ * @brief Characteristic information on a file.
+ **/
 struct file {
 	/*
 	 * fu_list becomes invalid after file_free is called and queued via
@@ -786,19 +789,20 @@ struct file {
 		struct list_head	fu_list;
 		struct rcu_head 	fu_rcuhead;
 	} f_u;
-	struct path		f_path;
+	struct path		f_path;	/**< Association between filename and inode; Information about mounted file system */
 #define f_dentry	f_path.dentry
 #define f_vfsmnt	f_path.mnt
-	const struct file_operations	*f_op;
+	const struct file_operations	*f_op;	/**< The file operations */
 	atomic_t		f_count;
-	unsigned int 		f_flags;
-	mode_t			f_mode;
-	loff_t			f_pos;
-	struct fown_struct	f_owner;
-	unsigned int		f_uid, f_gid;
-	struct file_ra_state	f_ra;
+	unsigned int 		f_flags;	/**< Additional flag passed by open system call */
+	mode_t			f_mode;	/**< Open file mode */
+	loff_t			f_pos;	/**< Current position of the file pointer */
+	struct fown_struct	f_owner;	/**< Contain the information on the process working with the file */	
+	unsigned int		f_uid;	/**< The UID of the user */
+	unsigned int        f_gid;	/**< The GID of the user */
+	struct file_ra_state	f_ra;	/**< The read ahead characteristics */
 
-	u64			f_version;
+	u64			f_version;	/**< Used to check file is compatible with the contents of the associated inode */
 #ifdef CONFIG_SECURITY
 	void			*f_security;
 #endif

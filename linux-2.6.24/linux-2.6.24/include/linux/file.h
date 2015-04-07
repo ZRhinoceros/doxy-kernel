@@ -26,11 +26,14 @@ struct embedded_fd_set {
 	unsigned long fds_bits[1];
 };
 
+/**
+ * @brief 
+ **/
 struct fdtable {
-	unsigned int max_fds;
-	struct file ** fd;      /* current fd array */
-	fd_set *close_on_exec;
-	fd_set *open_fds;
+	unsigned int max_fds;	/**< Store the max number of file objects and file descriptors that the process can handle 	*/
+	struct file ** fd;      /**< All information on an opened file */
+	fd_set *close_on_exec;	/**< Descriptors of all files to be closed on exec */
+	fd_set *open_fds;	/**< Descriptors of all current opened files */
 	struct rcu_head rcu;
 	struct fdtable *next;
 };
@@ -43,7 +46,7 @@ struct files_struct {
    * read mostly part
    */
 	atomic_t count;
-	struct fdtable *fdt;
+	struct fdtable *fdt;	/**< ??? */
 	struct fdtable fdtab;
   /*
    * written part on a separate cache line in SMP
